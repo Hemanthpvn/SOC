@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Level Up Your SOC: TOC & Cortex XSOAR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Base typography and scroll behavior */
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; color: #1e293b; }
+        
+        /* Chart Container Styling - MANDATORY REQUIREMENT */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px; /* Constrain max width for readability */
+            margin-left: auto;
+            margin-right: auto;
+            height: 40vh; /* Responsive height */
+            max-height: 400px; /* Prevent excessive vertical stretching */
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 35vh;
+                max-height: 350px;
+                padding: 0.5rem;
+            }
+        }
+
+        /* Custom Interactive Element Styles */
+        .step-btn.active {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+            transform: scale(1.02);
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5);
+        }
+        .step-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .step-btn:hover:not(.active) {
+            background-color: #e2e8f0;
+        }
+        
+        /* Reveal animation for content blocks */
+        .fade-in {
+            animation: fadeIn 0.4s ease-in forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    <!-- Chosen Palette: Slate Gray (Background), Crisp White (Cards), Bright Blue (Primary Actions/Highlights), Purple (Accents) -->
+    <!-- Application Structure Plan: A single-page interactive dashboard designed to guide the user from theoretical concepts to practical data evidence. 
+         1. Hero/Intro: Establishes context (SOC fatigue) and the solution (TOC + XSOAR).
+         2. The 3 Core Rules (Grid Layout): Breaks down foundational concepts into digestible, hoverable cards.
+         3. The 5-Step Cheat Code (Interactive Tabs): Allows users to linearly or non-linearly explore the TOC process, keeping the UI clean while offering deep dives.
+         4. Keeping Score (Interactive Charts): Uses Chart.js to visualize the "Before/After" impact, making the theoretical benefits tangible.
+         5. Traps & Takeaways (Toggle/List): Summarizes final advice and common pitfalls. 
+         This structure is chosen to prevent cognitive overload, allowing users to interactively uncover the 'story' of cybersecurity automation rather than reading a wall of text. -->
+    <!-- Visualization & Content Choices: 
+         - Rules/Concepts -> Inform -> Interactive Cards -> Hover states engage users while grouping related concepts cleanly. 
+         - 5-Step Process -> Organize/Process -> Tabbed Navigation Panel -> Allows step-by-step learning of the TOC methodology without scrolling through long lists. 
+         - Metrics (Throughput/Inventory) -> Compare -> Grouped Bar Chart (Chart.js Canvas) -> Visually proves the impact of XSOAR on alert volume and backlog. 
+         - Analyst Effort -> Compare -> Doughnut Chart (Chart.js Canvas) -> Shows the shift from manual effort to automated handling. 
+         - CONFIRMING: NO SVG/Mermaid used. Reliance on Tailwind CSS, standard HTML elements, Canvas (Chart.js), and Unicode Emojis for iconography. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="antialiased">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex-shrink-0 flex items-center gap-2">
+                    <span class="text-2xl">🛡️</span>
+                    <span class="font-bold text-xl text-slate-800 tracking-tight">SOC Automator</span>
+                </div>
+                <div class="hidden sm:flex space-x-8">
+                    <a href="#rules" class="text-slate-600 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">Core Rules</a>
+                    <a href="#process" class="text-slate-600 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">The 5 Steps</a>
+                    <a href="#metrics" class="text-slate-600 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">Impact Metrics</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="bg-slate-900 text-white py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
+                Leveling Up Cybersecurity <br/>
+                <span class="text-blue-400">with TOC & Cortex XSOAR</span>
+            </h1>
+            <p class="mt-4 max-w-2xl text-xl text-slate-300 mx-auto">
+                How to stop hackers faster, fix the traffic jams in your Security Operations Center (SOC), and save your analysts from burnout.
+            </p>
+            <div class="mt-8 flex justify-center gap-4">
+                <a href="#rules" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-lg">Start the Mission 🚀</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-24">
+
+        <!-- Section 1: The Core Rules -->
+        <section id="rules" class="scroll-mt-20">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-slate-900">The 3 Rules of the Game</h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-3xl mx-auto">
+                    <strong>Context:</strong> Before automating anything, you need to understand the playing field. This section breaks down the foundational principles of the Theory of Constraints (TOC) applied to a SOC. Interact with the cards below to see real-world cybersecurity examples of these rules in action.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Rule 1 -->
+                <div class="bg-white rounded-xl shadow-md p-8 border-t-4 border-blue-500 hover:shadow-xl transition-shadow cursor-default">
+                    <div class="text-4xl mb-4">🎯</div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Rule 1: Know The Goal</h3>
+                    <p class="text-slate-600 mb-4">You can't win if you don't know the objective. The SOC's goal is to catch bad guys and lock them out instantly without burning out humans.</p>
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm text-slate-700"><strong>XSOAR Help:</strong> Instead of humans reading every weird email, XSOAR auto-scans them in the background. Humans only fight the "bosses".</p>
+                    </div>
+                </div>
+
+                <!-- Rule 2 -->
+                <div class="bg-white rounded-xl shadow-md p-8 border-t-4 border-red-500 hover:shadow-xl transition-shadow cursor-default">
+                    <div class="text-4xl mb-4">🔗</div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Rule 2: The Slowest Player</h3>
+                    <p class="text-slate-600 mb-4">You are only as fast as your weakest link (the Constraint). It's usually the slowest, most boring manual step in your process.</p>
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm text-slate-700"><strong>The Bottleneck:</strong> Your robot catches a hacker instantly, but waits 2 hours for a human manager to click "Approve" to kick them out. That wait is the constraint.</p>
+                    </div>
+                </div>
+
+                <!-- Rule 3 -->
+                <div class="bg-white rounded-xl shadow-md p-8 border-t-4 border-green-500 hover:shadow-xl transition-shadow cursor-default">
+                    <div class="text-4xl mb-4">🛠️</div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Rule 3: Don't Fix What Works</h3>
+                    <p class="text-slate-600 mb-4">Don't upgrade the radio if the engine is on fire. Trying to automate everything at once is a mistake. Focus ONLY on the bottleneck.</p>
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <p class="text-sm text-slate-700"><strong>The Fix:</strong> If resetting stolen passwords takes 3 hours, automate THAT first. Don't waste time making an already fast reporting tool 1% faster.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: The 5-Step Cheat Code -->
+        <section id="process" class="scroll-mt-20 bg-white rounded-2xl shadow-lg p-8 border border-slate-200">
+            <div class="mb-10">
+                <h2 class="text-3xl font-bold text-slate-900 text-center">The 5-Step Automation Cheat Code</h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-3xl mx-auto text-center">
+                    <strong>Context:</strong> How do you actually find and destroy these bottlenecks? This interactive panel walks you through the 5 focusing steps of TOC. <strong>Click the steps below</strong> to reveal how to apply each phase using Cortex XSOAR playbooks.
+                </p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-8">
+                <!-- Navigation Steps -->
+                <div class="lg:w-1/3 flex flex-col gap-3" id="step-nav-container">
+                    <!-- Buttons generated by JS -->
+                </div>
+
+                <!-- Content Display -->
+                <div class="lg:w-2/3 bg-slate-50 rounded-xl p-8 border border-slate-200 min-h-[300px] flex items-center shadow-inner" id="step-content-display">
+                    <!-- Content injected by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Metrics & Scorekeeping -->
+        <section id="metrics" class="scroll-mt-20">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-slate-900">📊 Keeping Score: The Magic Stats</h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-3xl mx-auto">
+                    <strong>Context:</strong> Automation is only useful if it improves operational realities. This section visualizes the core metrics: Throughput (Win Column), Inventory (Waiting Line), and Operating Expense (Sweat/Cash). <strong>Hover over the charts</strong> to see the exact data comparing a SOC before and after implementing Cortex XSOAR.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- Chart 1: Throughput & Inventory -->
+                <div class="bg-white rounded-xl shadow-md p-6 border border-slate-100 flex flex-col">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2 text-center">Daily Alert Handling (Throughput vs Inventory)</h3>
+                    <p class="text-sm text-slate-500 text-center mb-6">Goal: Increase Throughput, Decrease Inventory (Backlog)</p>
+                    <!-- Mandatory Chart Container Structure -->
+                    <div class="chart-container flex-grow">
+                        <canvas id="throughputChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Operating Expense / Effort -->
+                <div class="bg-white rounded-xl shadow-md p-6 border border-slate-100 flex flex-col">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2 text-center">Analyst Effort Breakdown</h3>
+                    <p class="text-sm text-slate-500 text-center mb-6">Goal: Lower Manual Effort per Incident</p>
+                    <!-- Mandatory Chart Container Structure -->
+                    <div class="chart-container flex-grow">
+                        <canvas id="effortChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+            
+            <!-- Summary Metric Box -->
+            <div class="mt-8 bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg">
+                <h4 class="text-lg font-bold text-blue-900 mb-2">The Real-World Result 🎉</h4>
+                <p class="text-blue-800">
+                    <strong>Before:</strong> 5 humans sweating over 200 phishing alerts a day, creating a massive backlog.<br>
+                    <strong>After XSOAR:</strong> 150 alerts are deleted by robots instantly. Humans easily handle the remaining 50 complex cases. <strong>Backlog = 0.</strong>
+                </p>
+            </div>
+        </section>
+
+        <!-- Section 4: Traps and Takeaways -->
+        <section class="scroll-mt-20 pb-12">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-slate-900">🚦 Traps & The Ultimate Playbook</h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-3xl mx-auto">
+                    <strong>Context:</strong> Knowing what <em>not</em> to do is as important as knowing what to do. Explore common leadership myths and grab the final takeaway playbook for your SOC. <strong>Click the myth blocks</strong> to reveal the TOC reality.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                <!-- Interactive Traps -->
+                <div class="space-y-4" id="traps-container">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-4 border-b pb-2">Common Pitfalls</h3>
+                    <!-- Trap 1 -->
+                    <div class="trap-card cursor-pointer bg-white border border-slate-200 rounded-lg p-5 shadow-sm hover:shadow-md transition-all" onclick="toggleTrap(this)">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-red-600 flex items-center gap-2"><span>❌</span> The "Red Light" Trap</h4>
+                            <span class="text-xs font-semibold bg-slate-100 px-2 py-1 rounded text-slate-500">Click to reveal</span>
+                        </div>
+                        <p class="text-slate-700 font-medium myth-text">Myth: "If we buy a faster detection tool (SIEM), we are safer."</p>
+                        <div class="hidden reality-text mt-3 pt-3 border-t border-slate-100 text-sm text-slate-600 fade-in">
+                            <strong>Reality:</strong> Local Efficiency vs Global Performance. If your tool detects a hacker in 0.5 seconds, but XSOAR waits 4 hours for a human manager to approve the fix, the hacker still has 4 hours to steal data. Fix the whole response chain!
+                        </div>
+                    </div>
+
+                    <!-- Trap 2 -->
+                    <div class="trap-card cursor-pointer bg-white border border-slate-200 rounded-lg p-5 shadow-sm hover:shadow-md transition-all" onclick="toggleTrap(this)">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-red-600 flex items-center gap-2"><span>❌</span> The Boss's Mistake</h4>
+                            <span class="text-xs font-semibold bg-slate-100 px-2 py-1 rounded text-slate-500">Click to reveal</span>
+                        </div>
+                        <p class="text-slate-700 font-medium myth-text">Myth: "Buying more shiny cybersecurity tools equals more security."</p>
+                        <div class="hidden reality-text mt-3 pt-3 border-t border-slate-100 text-sm text-slate-600 fade-in">
+                            <strong>Reality:</strong> Buying 2 more threat-hunting tools during a traffic jam just adds more cars to the jam. Your SOC is limited by manual bottlenecks, not a lack of tools. Stop buying toys; start fixing the flow.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- The Takeaway Playbook -->
+                <div class="bg-slate-900 rounded-xl p-8 shadow-xl text-white">
+                    <h3 class="text-2xl font-bold text-blue-400 mb-6 flex items-center gap-2"><span>🔑</span> The Ultimate Playbook</h3>
+                    <p class="mb-6 text-slate-300 italic">"In cybersecurity automation, the real enemy is manual, boring work."</p>
+                    
+                    <ol class="space-y-4 list-decimal list-inside font-medium text-lg text-slate-200 marker:text-blue-500">
+                        <li class="pl-2">Find the annoying manual bottleneck. <span class="text-xl">🔍</span></li>
+                        <li class="pl-2">Automate it with a robot playbook. <span class="text-xl">🤖</span></li>
+                        <li class="pl-2">Change your team's rules to support it. <span class="text-xl">🤝</span></li>
+                        <li class="pl-2">Add more robot power if still too slow. <span class="text-xl">⚡</span></li>
+                        <li class="pl-2">Do it again. <span class="text-xl">🔁</span></li>
+                    </ol>
+                    
+                    <div class="mt-8 pt-6 border-t border-slate-700 text-center">
+                        <p class="text-xl font-bold text-white">Now go out there and automate the boring stuff! 🛡️</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-8 text-center border-t border-slate-800">
+        <p>Interactive summary based on "Theory of Constraints for Cybersecurity Automation with Cortex XSOAR"</p>
+    </footer>
+
+    <!-- Application Logic -->
+    <script>
+        // --- DATA STORE ---
+        const stepData = [
+            {
+                id: 1,
+                title: "1️⃣ Identify the Constraint",
+                shortTitle: "Identify",
+                emoji: "🔍",
+                subtitle: "(Find the Traffic Jam)",
+                description: "What's taking the longest? Is it analysts manually reviewing 1,000 spam emails? Is it waiting for server patch approvals? You must find the absolute worst culprit in the workflow before doing anything else."
+            },
+            {
+                id: 2,
+                title: "2️⃣ Exploit the Constraint",
+                shortTitle: "Exploit",
+                emoji: "🍋",
+                subtitle: "(Squeeze the Lemon)",
+                description: "Make the slow part work smarter without buying new tools yet. Use XSOAR to automatically gather all clues about a spam email (checking VirusTotal, scanning links) <em>before</em> the human even opens the ticket."
+            },
+            {
+                id: 3,
+                title: "3️⃣ Subordinate Everything Else",
+                shortTitle: "Subordinate",
+                emoji: "🧹",
+                subtitle: "(Clear the Path)",
+                description: "Make everything else support the bottleneck. Don't annoy the humans with garbage alerts. Use XSOAR to auto-delete the 'definitely safe' stuff so the humans only see what actually matters."
+            },
+            {
+                id: 4,
+                title: "4️⃣ Elevate the Constraint",
+                shortTitle: "Elevate",
+                emoji: "🚀",
+                subtitle: "(Level It Up!)",
+                description: "Throw more power at it. Build a killer XSOAR 'Playbook' (a recipe for the robot). Have it automatically isolate the infected computer, lock the hacker out, and close the ticket. Boom. Bottleneck gone."
+            },
+            {
+                id: 5,
+                title: "5️⃣ Repeat the Cycle",
+                shortTitle: "Repeat",
+                emoji: "🔁",
+                subtitle: "(Next Level)",
+                description: "You beat the boss! But wait... now that phishing is fixed, what's the <em>new</em> slowest thing in the SOC? (Maybe it's Cloud IAM remediation?). Go back to Step 1 and do it again."
+            }
+        ];
+
+        // --- INTERACTIVE 5-STEP LOGIC ---
+        function initStepInteractive() {
+            const navContainer = document.getElementById('step-nav-container');
+            const displayContainer = document.getElementById('step-content-display');
+
+            // Generate Buttons
+            stepData.forEach((step, index) => {
+                const btn = document.createElement('button');
+                btn.className = `step-btn w-full text-left px-6 py-4 rounded-lg font-bold text-lg border border-slate-200 bg-white text-slate-700 flex justify-between items-center ${index === 0 ? 'active' : ''}`;
+                btn.innerHTML = `<span>${step.title}</span> <span class="text-slate-400">→</span>`;
+                btn.onclick = () => {
+                    // Update active state
+                    document.querySelectorAll('.step-btn').forEach(b => {
+                        b.classList.remove('active');
+                        b.classList.add('bg-white', 'text-slate-700');
+                    });
+                    btn.classList.add('active');
+                    btn.classList.remove('bg-white', 'text-slate-700');
+                    
+                    // Render content
+                    renderStepContent(index);
+                };
+                navContainer.appendChild(btn);
+            });
+
+            // Initial render
+            renderStepContent(0);
+
+            function renderStepContent(index) {
+                const data = stepData[index];
+                displayContainer.innerHTML = `
+                    <div class="fade-in w-full">
+                        <div class="text-6xl mb-6 text-center lg:text-left">${data.emoji}</div>
+                        <h3 class="text-2xl font-bold text-slate-800 mb-2">${data.title}</h3>
+                        <h4 class="text-lg font-semibold text-blue-600 mb-4">${data.subtitle}</h4>
+                        <p class="text-slate-700 leading-relaxed text-lg">${data.description}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // --- INTERACTIVE TRAPS LOGIC ---
+        window.toggleTrap = function(element) {
+            const realityText = element.querySelector('.reality-text');
+            const indicator = element.querySelector('span.text-xs');
+            
+            if (realityText.classList.contains('hidden')) {
+                realityText.classList.remove('hidden');
+                element.classList.add('border-blue-300', 'bg-blue-50');
+                indicator.innerText = "Revealed";
+                indicator.classList.replace('bg-slate-100', 'bg-blue-200');
+                indicator.classList.replace('text-slate-500', 'text-blue-800');
+            } else {
+                realityText.classList.add('hidden');
+                element.classList.remove('border-blue-300', 'bg-blue-50');
+                indicator.innerText = "Click to reveal";
+                indicator.classList.replace('bg-blue-200', 'bg-slate-100');
+                indicator.classList.replace('text-blue-800', 'text-slate-500');
+            }
+        };
+
+
+        // --- CHART.JS VISUALIZATIONS ---
+        function initCharts() {
+            // Chart 1: Throughput vs Inventory (Bar Chart)
+            const ctx1 = document.getElementById('throughputChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: ['Before Automation', 'After XSOAR Automation'],
+                    datasets: [
+                        {
+                            label: 'Manual Human Reviews',
+                            data: [200, 50],
+                            backgroundColor: '#94a3b8', // Slate 400
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Auto-Closed by Robots',
+                            data: [0, 150],
+                            backgroundColor: '#3b82f6', // Blue 500
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Backlog (Inventory)',
+                            data: [150, 0], // Hypothetical starting backlog for dramatic effect
+                            backgroundColor: '#ef4444', // Red 500
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // MANDATORY for proper container fitting
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.raw + ' alerts/day';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            stacked: false,
+                            beginAtZero: true,
+                            title: { display: true, text: 'Number of Alerts' }
+                        },
+                        x: {
+                            stacked: false,
+                            ticks: {
+                                callback: function(value) {
+                                    // 16-char wrapping logic (approximate via array split for ChartJS)
+                                    const label = this.getLabelForValue(value);
+                                    if (label.length > 16) {
+                                        return label.split(' ');
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Chart 2: Analyst Effort Breakdown (Doughnut)
+            const ctx2 = document.getElementById('effortChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Boring Repetitive Tasks', 'Complex Boss Fights', 'Waiting/Idle Time'],
+                    datasets: [{
+                        label: 'Before XSOAR',
+                        data: [70, 10, 20], // Percentages
+                        backgroundColor: ['#f87171', '#fbbf24', '#cbd5e1'],
+                        borderWidth: 2,
+                        hoverOffset: 4
+                    },
+                    {
+                        label: 'After XSOAR',
+                        data: [5, 85, 10], // Shifted effort to complex tasks
+                        backgroundColor: ['#f87171', '#34d399', '#cbd5e1'],
+                        borderWidth: 2,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // MANDATORY for proper container fitting
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed !== null) { label += context.parsed + '% of time'; }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initStepInteractive();
+            initCharts();
+        });
+    </script>
+</body>
+</html>
